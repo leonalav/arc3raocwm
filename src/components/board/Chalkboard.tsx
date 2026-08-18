@@ -285,12 +285,130 @@ export function Chalkboard({
     };
   }, [panning]);
 
+  // ── Touch: single-finger pan + two-finger pinch-zoom around midpoint ──
+  const touchRef = useRef<{
+    mode: 'pan' | 'pinch'
+    startX: number
+    startY: number
+    vx: number
+    vy: number
+    startDist: number
+    startS: number
+    midX: number
+    midY: number
+  } | null>(null)
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (readOnly || annotating) return
+    const t0 = e.target as HTMLElement
+    if (t0.closest('[data-nopan]')) return
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      // same dead-zone rule as mouse: ignore if touch is on block content
+      const block = t0.closest('[data-block]')
+      if (block && block !== t0) return
+      touchRef.current = {
+        mode: 'pan',
+        startX: t.clientX,
+        startY: t.clientY,
+        vx: view.x,
+        vy: view.y,
+        startDist: 0,
+        startS: view.s,
+        midX: 0,
+        midY: 0,
+      }
+      setPanning(true)
+    } else if (e.touches.length === 2) {
+      const a = e.touches[0], b = e.touches[1]
+      const dx = a.clientX - b.clientX
+      const dy = a.clientY - b.clientY
+      const dist = Math.hypot(dx, dy) || 1
+      const mx = (a.clientX + b.clientX) / 2
+      const my = (a.clientY + b.clientY) / 2
+      touchRef.current = {
+        mode: 'pinch',
+        startX: mx,
+        startY: my,
+        vx: view.x,
+        vy: view.y,
+        startDist: dist,
+        startS: view.s,
+        midX: mx,
+        midY: my,
+      }
+      setPanning(true)
+    }
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    const st = touchRef.current
+    if (!st || readOnly || annotating) return
+    // prevent page scroll / browser pinch-zoom
+    e.preventDefault()
+    e.stopPropagation()
+    if (st.mode === 'pan' && e.touches.length === 1) {
+      const t = e.touches[0]
+      setView((prev) => ({ ...prev, x: st.vx + (t.clientX - st.startX), y: st.vy + (t.clientY - st.startY) }))
+    } else if (st.mode === 'pinch' && e.touches.length === 2) {
+      const a = e.touches[0], b = e.touches[1]
+      const dx = a.clientX - b.clientX
+      const dy = a.clientY - b.clientY
+      const dist = Math.hypot(dx, dy) || 1
+      const scale = Math.min(MAX_BOARD_ZOOM, Math.max(MIN_BOARD_ZOOM, st.startS * (dist / st.startDist)))
+      const mx = (a.clientX + b.clientX) / 2
+      const my = (a.clientY + b.clientY) / 2
+      const box = wrapRef.current?.getBoundingClientRect()
+      const cx = box ? box.left + box.width / 2 : mx
+      const cy = box ? box.top + box.height / 2 : my
+      // keep the board point under the gesture midpoint stable while zooming,
+      // and also allow the midpoint itself to drift (pan) with the fingers.
+      const boardX = (st.midX - st.vx) / st.startS
+      const boardY = (st.midY - st.vy) / st.startS
+      // new pan accounts for both zoom anchor and finger movement
+      const panX = mx - boardX * scale + (mx - st.midX) * 0.5
+      const panY = my - boardY * scale + (my - st.midY) * 0.5
+      // if box center is a better anchor (keeps board roughly centered on resize), blend slightly
+      void cx; void cy
+      setView((prev) => ({ ...prev, x: panX, y: panY, s: scale }))
+    }
+  }
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      touchRef.current = null
+      setPanning(false)
+    } else if (e.touches.length === 1) {
+      // transition from pinch -> pan without jump
+      const t = e.touches[0]
+      const cur = viewRef.current
+      touchRef.current = {
+        mode: 'pan',
+        startX: t.clientX,
+        startY: t.clientY,
+        vx: cur.x,
+        vy: cur.y,
+        startDist: 0,
+        startS: cur.s,
+        midX: 0,
+        midY: 0,
+      }
+    }
+  }
+
   const onWheel = (e: React.WheelEvent) => {
     if (readOnly || annotating) return;
     const target = e.target as HTMLElement;
     if (target.closest("[data-nopan]")) return;
+    // Isolate board scroll from page inertial scroll — board pans/zooms, page stays.
+    e.preventDefault();
+    e.stopPropagation();
+    if ((e.nativeEvent as WheelEvent).stopImmediatePropagation) {
+      (e.nativeEvent as WheelEvent).stopImmediatePropagation();
+    }
     if (e.ctrlKey || e.metaKey) {
       const delta = -e.deltaY * 0.0016;
+      // pinch-zoom around viewport center feels most stable for wheel
       setView((v) => ({ ...v, s: Math.min(MAX_BOARD_ZOOM, Math.max(MIN_BOARD_ZOOM, v.s + delta)) }));
     } else {
       setView((v) => ({ ...v, x: v.x - e.deltaX, y: v.y - e.deltaY }));
@@ -437,10 +555,14 @@ export function Chalkboard({
       ref={wrapRef}
       onMouseDown={onDown}
       onWheel={onWheel}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       className="relative h-full w-full overflow-hidden select-none"
       style={{
         background: theme.bg,
         cursor: readOnly ? "default" : annotating ? "crosshair" : panning ? "grabbing" : "grab",
+        touchAction: "none",
       }}
       aria-label={readOnly ? "Read-only chalkboard snapshot" : "Interactive chalkboard"}
     >
@@ -634,7 +756,7 @@ export function Chalkboard({
       </div>
 
       <div className="pointer-events-none absolute bottom-3 left-[138px] rounded-md bg-black/40 px-2 py-1 font-mono text-[9.5px] text-white/55 backdrop-blur-sm">
-        drag empty space to pan · ⌘/ctrl + scroll to zoom
+        drag to pan · pinch to zoom · ⌘/ctrl + scroll
       </div>
       <div className="pointer-events-none absolute bottom-3 right-3 max-w-[34%] truncate rounded-md bg-black/40 px-2 py-1 text-right font-mono text-[9.5px] text-white/55 backdrop-blur-sm" title={board.title}>
         {board.title}
