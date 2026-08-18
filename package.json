@@ -10,14 +10,26 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rdkit/rdkit": "2025.3.4-1.0.0",
+    "cytoscape": "^3.34.1",
+    "d3-contour": "^4.0.2",
+    "echarts": "^6.1.0",
     "gsap": "^3.15.0",
+    "jsxgraph": "^1.13.1",
+    "katex": "^0.18.4",
+    "lucide-react": "^1.31.0",
+    "mathjs": "^15.2.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.12",
+    "@types/d3-contour": "^3.0.6",
+    "@types/katex": "^0.16.8",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
+    "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^5.0.2",
     "tailwindcss": "^4.1.12",
     "typescript": "~5.8.3",

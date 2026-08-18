@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useInertialScroll } from './useInertialScroll'
 import Pricing from './Pricing'
 import About from './About'
+import Footer, { type Section } from './Footer'
 import Scrollbar from './Scrollbar'
-
-type Section = 'intro' | 'about' | 'pricing'
 
 const VIDEO_URL =
   'https://res.cloudinary.com/xxewz7ta/video/upload/v1786971407/a.mp4'
@@ -282,7 +281,7 @@ function WindowsIcon() {
   )
 }
 
-function Hero() {
+function Hero({ onNavigate }: { onNavigate: (target: Section) => void }) {
   const [actionsVisible, setActionsVisible] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
   const [responseSlides, setResponseSlides] = useState<string[]>([])
@@ -333,78 +332,83 @@ function Hero() {
   }
 
   return (
-    <main className="relative z-[1] flex h-screen flex-col justify-end overflow-hidden px-5 pb-8 sm:px-8 sm:pb-12 md:justify-center md:px-10 md:pb-0">
-      <div className="relative z-10 max-w-2xl">
-        <div className="mb-5 min-h-[120px] sm:mb-6 sm:min-h-[105px]" aria-live="polite">
-          <p
-            key={`${activeSlide}-${currentText}`}
-            className="carousel-slide text-white"
-            style={{ fontSize: 'clamp(18px, 4vw, 26px)', lineHeight: 1.35, fontWeight: 400 }}
-            aria-label={currentText}
+    <>
+      <main className="relative z-[1] flex h-screen flex-col justify-end overflow-hidden px-5 pb-8 sm:px-8 sm:pb-12 md:justify-center md:px-10 md:pb-0">
+        <div className="relative z-10 max-w-2xl">
+          <div className="mb-5 min-h-[120px] sm:mb-6 sm:min-h-[105px]" aria-live="polite">
+            <p
+              key={`${activeSlide}-${currentText}`}
+              className="carousel-slide text-white"
+              style={{ fontSize: 'clamp(18px, 4vw, 26px)', lineHeight: 1.35, fontWeight: 400 }}
+              aria-label={currentText}
+            >
+              <span aria-hidden="true">{displayed}</span>
+              {!done && (
+                <span
+                  className="typewriter-cursor ml-[2px] inline-block h-[1.05em] w-[2px] align-middle bg-white"
+                  aria-hidden="true"
+                />
+              )}
+            </p>
+            <div className="mt-4 flex items-center gap-2" aria-label="Carousel navigation">
+              {initialSlides.map((slide, index) => (
+                <button
+                  key={`${slide}-${index}`}
+                  type="button"
+                  className={`h-[5px] rounded-full bg-white transition-all duration-300 ${
+                    index === activeSlide ? 'w-6 opacity-100' : 'w-[5px] opacity-50 hover:opacity-80'
+                  }`}
+                  onClick={() => setActiveSlide(index)}
+                  aria-label={`Show slide ${index + 1}`}
+                  aria-current={index === activeSlide ? 'true' : undefined}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div
+            className="flex flex-col items-start gap-2"
+            style={{
+              opacity: actionsVisible ? 1 : 0,
+              transform: actionsVisible ? 'translateY(0)' : 'translateY(8px)',
+              transition: 'opacity 0.4s ease, transform 0.4s ease',
+            }}
           >
-            <span aria-hidden="true">{displayed}</span>
-            {!done && (
-              <span
-                className="typewriter-cursor ml-[2px] inline-block h-[1.05em] w-[2px] align-middle bg-white"
-                aria-hidden="true"
-              />
-            )}
-          </p>
-          <div className="mt-4 flex items-center gap-2" aria-label="Carousel navigation">
-            {initialSlides.map((slide, index) => (
-              <button
-                key={`${slide}-${index}`}
-                type="button"
-                className={`h-[5px] rounded-full bg-white transition-all duration-300 ${
-                  index === activeSlide ? 'w-6 opacity-100' : 'w-[5px] opacity-50 hover:opacity-80'
-                }`}
-                onClick={() => setActiveSlide(index)}
-                aria-label={`Show slide ${index + 1}`}
-                aria-current={index === activeSlide ? 'true' : undefined}
-              />
-            ))}
+            {questions.map((question, index) => {
+              const isGenerating = generatingQuestions.includes(index)
+              return (
+                <button
+                  key={question}
+                  type="button"
+                  className={`inline-flex max-w-full items-center justify-center rounded-full border px-4 py-[0.45em] text-left text-[13px] leading-tight transition-colors duration-200 sm:px-5 sm:text-[15px] ${
+                    isGenerating
+                      ? 'cursor-wait border-white/20 bg-white/45 text-black/50'
+                      : 'border-black/10 bg-white text-black hover:bg-black hover:text-white'
+                  }`}
+                  onClick={() => answerQuestion(index)}
+                  disabled={isGenerating}
+                  aria-busy={isGenerating}
+                >
+                  {question}
+                </button>
+              )
+            })}
+            <a
+              id="download"
+              href="#download"
+              className="mt-1 inline-flex items-center gap-2 rounded-full border border-white bg-transparent px-4 py-[0.45em] text-[13px] text-white transition-colors duration-200 hover:bg-white hover:text-black sm:gap-3 sm:px-5 sm:text-[15px]"
+              aria-label="Download Studyus for Windows, 15 megabytes"
+            >
+              <WindowsIcon />
+              <span>Download for Windows · 15MB</span>
+            </a>
           </div>
         </div>
+      </main>
 
-        <div
-          className="flex flex-col items-start gap-2"
-          style={{
-            opacity: actionsVisible ? 1 : 0,
-            transform: actionsVisible ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 0.4s ease, transform 0.4s ease',
-          }}
-        >
-          {questions.map((question, index) => {
-            const isGenerating = generatingQuestions.includes(index)
-            return (
-              <button
-                key={question}
-                type="button"
-                className={`inline-flex max-w-full items-center justify-center rounded-full border px-4 py-[0.45em] text-left text-[13px] leading-tight transition-colors duration-200 sm:px-5 sm:text-[15px] ${
-                  isGenerating
-                    ? 'cursor-wait border-white/20 bg-white/45 text-black/50'
-                    : 'border-black/10 bg-white text-black hover:bg-black hover:text-white'
-                }`}
-                onClick={() => answerQuestion(index)}
-                disabled={isGenerating}
-                aria-busy={isGenerating}
-              >
-                {question}
-              </button>
-            )
-          })}
-          <a
-            id="download"
-            href="#download"
-            className="mt-1 inline-flex items-center gap-2 rounded-full border border-white bg-transparent px-4 py-[0.45em] text-[13px] text-white transition-colors duration-200 hover:bg-white hover:text-black sm:gap-3 sm:px-5 sm:text-[15px]"
-            aria-label="Download Studyus for Windows, 15 megabytes"
-          >
-            <WindowsIcon />
-            <span>Download for Windows · 15MB</span>
-          </a>
-        </div>
-      </div>
-    </main>
+      {/* ── Footer ── */}
+      <Footer onNavigate={onNavigate} />
+    </>
   )
 }
 
@@ -437,7 +441,7 @@ export default function App() {
         }}
       >
         {section === 'intro' ? (
-          <Hero />
+          <Hero onNavigate={navigate} />
         ) : section === 'about' ? (
           <About onNavigate={navigate} />
         ) : (
