@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { useInertialScroll } from './useInertialScroll'
+import Pricing from './Pricing'
+import About from './About'
+import Scrollbar from './Scrollbar'
+
+type Section = 'intro' | 'about' | 'pricing'
 
 const VIDEO_URL =
   'https://res.cloudinary.com/xxewz7ta/video/upload/v1786971407/a.mp4'
@@ -49,87 +55,6 @@ function useTypewriter(text: string, speed = 24, startDelay = 350, resetKey = 0)
   }, [text, speed, startDelay, resetKey])
 
   return { displayed, done }
-}
-
-function useInertialScroll() {
-  const targetY = useRef(0)
-  const currentY = useRef(0)
-  const frame = useRef<number | null>(null)
-  const isAnimating = useRef(false)
-
-  useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (reducedMotion.matches) return
-
-    targetY.current = window.scrollY
-    currentY.current = window.scrollY
-
-    const maxScroll = () =>
-      Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-
-    const animate = () => {
-      const distance = targetY.current - currentY.current
-      currentY.current += distance * 0.09
-
-      if (Math.abs(distance) < 0.35) {
-        currentY.current = targetY.current
-        window.scrollTo(0, currentY.current)
-        frame.current = null
-        isAnimating.current = false
-        return
-      }
-
-      window.scrollTo(0, currentY.current)
-      frame.current = window.requestAnimationFrame(animate)
-    }
-
-    const startAnimation = () => {
-      if (frame.current === null) {
-        isAnimating.current = true
-        frame.current = window.requestAnimationFrame(animate)
-      }
-    }
-
-    const handleWheel = (event: WheelEvent) => {
-      const limit = maxScroll()
-      if (limit <= 0) return
-
-      event.preventDefault()
-      const multiplier = event.deltaMode === 1
-        ? 16
-        : event.deltaMode === 2
-          ? window.innerHeight
-          : 1
-      targetY.current = Math.min(
-        limit,
-        Math.max(0, targetY.current + event.deltaY * multiplier),
-      )
-      startAnimation()
-    }
-
-    const handleScroll = () => {
-      if (isAnimating.current) return
-      currentY.current = window.scrollY
-      targetY.current = window.scrollY
-    }
-
-    const handleResize = () => {
-      const limit = maxScroll()
-      targetY.current = Math.min(targetY.current, limit)
-      currentY.current = Math.min(currentY.current, limit)
-    }
-
-    window.addEventListener('wheel', handleWheel, { passive: false })
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener('wheel', handleWheel)
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleResize)
-      if (frame.current !== null) window.cancelAnimationFrame(frame.current)
-    }
-  }, [])
 }
 
 function BackgroundVideo() {
@@ -202,13 +127,36 @@ function BackgroundVideo() {
   )
 }
 
-function Navbar() {
+function Navbar({
+  onNavigate,
+}: {
+  onNavigate: (target: Section) => void
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const navTarget: Record<string, Section | undefined> = {
+    Studyus: 'intro',
+    'About Us': 'about',
+    Pricing: 'pricing',
+  }
+
+  const go = (target: Section) => {
+    setMenuOpen(false)
+    onNavigate(target)
+  }
 
   return (
     <>
       <nav className="fixed top-0 z-10 flex w-full items-center justify-between px-5 py-4 text-white sm:px-8 sm:py-5">
-        <a href="#" className="flex items-center gap-3 text-white" aria-label="Studyus home">
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault()
+            go('intro')
+          }}
+          className="flex items-center gap-3 text-white"
+          aria-label="Studyus home"
+        >
           <span
             className="text-[21px] tracking-tight sm:text-[26px]"
             style={{ fontFamily: 'var(--font-heading)' }}
@@ -216,7 +164,7 @@ function Navbar() {
             Studyus®
           </span>
           <span
-            className="select-none text-[25px] tracking-[-0.02em] sm:text-[30px]"
+            className="select-none text-[25px] tracking-[-0.02em] text-white sm:text-[30px]"
             aria-hidden="true"
           >
             ✳︎
@@ -224,21 +172,41 @@ function Navbar() {
         </a>
 
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center text-[23px] text-white md:flex">
-          {navigation.map((item, index) => (
-            <span key={item}>
-              <a
-                href={`#${item.toLowerCase().replaceAll(' ', '-')}`}
-                className="transition-opacity hover:opacity-60"
-              >
-                {item}
-              </a>
-              {index < navigation.length - 1 && ', '}
-            </span>
-          ))}
+          {navigation.map((item, index) => {
+            const target = navTarget[item]
+            return (
+              <span key={item}>
+                {target ? (
+                  <a
+                    href={target === 'pricing' ? '#pricing' : target === 'about' ? '#about-us' : '#'}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      go(target)
+                    }}
+                    className="transition-opacity hover:opacity-60"
+                  >
+                    {item}
+                  </a>
+                ) : (
+                  <a
+                    href={`#${item.toLowerCase().replaceAll(' ', '-')}`}
+                    className="transition-opacity hover:opacity-60"
+                  >
+                    {item}
+                  </a>
+                )}
+                {index < navigation.length - 1 && ', '}
+              </span>
+            )
+          })}
         </div>
 
         <a
           href="#download"
+          onClick={(e) => {
+            e.preventDefault()
+            go('intro')
+          }}
           className="hidden text-[23px] text-white underline underline-offset-2 transition-opacity hover:opacity-60 md:block"
         >
           Try Studyus free
@@ -258,26 +226,45 @@ function Navbar() {
       </nav>
 
       <div
-        className={`fixed inset-0 z-[9] flex flex-col justify-center gap-8 bg-black/90 px-8 text-white backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[9] flex flex-col justify-center gap-8 bg-black/90 px-8 text-white transition-opacity duration-300 md:hidden ${
           menuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         aria-hidden={!menuOpen}
       >
-        {navigation.map((item) => (
-          <a
-            key={item}
-            href={`#${item.toLowerCase().replaceAll(' ', '-')}`}
-            className="text-[32px] font-medium text-white"
-            onClick={() => setMenuOpen(false)}
-            tabIndex={menuOpen ? 0 : -1}
-          >
-            {item}
-          </a>
-        ))}
+        {navigation.map((item) => {
+          const target = navTarget[item]
+          return target ? (
+            <a
+              key={item}
+              href={target === 'pricing' ? '#pricing' : target === 'about' ? '#about-us' : '#'}
+              className="text-[32px] font-medium text-white"
+              onClick={(e) => {
+                e.preventDefault()
+                go(target)
+              }}
+              tabIndex={menuOpen ? 0 : -1}
+            >
+              {item}
+            </a>
+          ) : (
+            <a
+              key={item}
+              href={`#${item.toLowerCase().replaceAll(' ', '-')}`}
+              className="text-[32px] font-medium text-white"
+              onClick={() => setMenuOpen(false)}
+              tabIndex={menuOpen ? 0 : -1}
+            >
+              {item}
+            </a>
+          )
+        })}
         <a
           href="#download"
           className="text-[32px] font-medium text-white underline underline-offset-2"
-          onClick={() => setMenuOpen(false)}
+          onClick={(e) => {
+            e.preventDefault()
+            go('intro')
+          }}
           tabIndex={menuOpen ? 0 : -1}
         >
           Try Studyus free
@@ -424,11 +411,39 @@ function Hero() {
 export default function App() {
   useInertialScroll()
 
+  const [section, setSection] = useState<Section>('intro')
+  const [fading, setFading] = useState(false)
+
+  const navigate = (target: Section) => {
+    if (target === section || fading) return
+    setFading(true)
+    window.setTimeout(() => {
+      setSection(target)
+      window.scrollTo(0, 0)
+      requestAnimationFrame(() => requestAnimationFrame(() => setFading(false)))
+    }, 500)
+  }
+
   return (
     <div className="min-h-full w-full">
       <BackgroundVideo />
-      <Navbar />
-      <Hero />
+      <Navbar onNavigate={navigate} />
+      <Scrollbar />
+      <div
+        className="relative z-[1]"
+        style={{
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 500ms ease',
+        }}
+      >
+        {section === 'intro' ? (
+          <Hero />
+        ) : section === 'about' ? (
+          <About />
+        ) : (
+          <Pricing />
+        )}
+      </div>
     </div>
   )
 }
