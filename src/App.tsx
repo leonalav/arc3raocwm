@@ -439,9 +439,9 @@ export default function App() {
         {section === 'intro' ? (
           <Hero />
         ) : section === 'about' ? (
-          <About />
+          <About onNavigate={navigate} />
         ) : (
-          <Pricing />
+          <Pricing onNavigate={navigate} />
         )}
       </div>
     </div>
