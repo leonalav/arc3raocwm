@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
-:root {
+@theme {
   --font-heading: 'HelveticaNowDisplay-Medium', 'Helvetica Neue', Arial, sans-serif;
   --font-body: 'HelveticaNowDisplayW01-Rg', 'Helvetica Neue', Arial, sans-serif;
+}
+
+:root {
   font-synthesis: none;
   color: #000;
   background: #b5b5b5;
@@ -23,6 +26,16 @@ body,
 
 html {
   overscroll-behavior-y: none;
+  /* Hide the native scrollbar entirely (replaced by a custom borderless one). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 body {
