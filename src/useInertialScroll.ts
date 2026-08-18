@@ -73,7 +73,11 @@ export function useInertialScroll() {
       })
     }
 
+    const isInBoard = (target: EventTarget | null) =>
+      (target as HTMLElement)?.closest?.('[data-nopan], .board-chrome, [data-board-content]') != null
+
     const onWheel = (e: WheelEvent) => {
+      if (isInBoard(e.target)) return
       if (scrollLimit() <= 0) return
       e.preventDefault()
       const mul =
@@ -97,6 +101,7 @@ export function useInertialScroll() {
     }
 
     const onTouchStart = (e: TouchEvent) => {
+      if (isInBoard(e.target)) return
       touching = true
       stop()
       const t = e.touches[0]
@@ -106,6 +111,7 @@ export function useInertialScroll() {
     }
 
     const onTouchMove = (e: TouchEvent) => {
+      if (isInBoard(e.target)) return
       if (!touching || scrollLimit() <= 0) return
       e.preventDefault()
       const t = e.touches[0]
@@ -140,6 +146,9 @@ export function useInertialScroll() {
     }
 
     const onClick = (e: MouseEvent) => {
+      // Demo chalkboard is an isolated interaction surface — no anchor glide, no
+      // scroll hijack. This prevents the “click chat → jump to top” friction.
+      if (isInBoard(e.target)) return
       // Respect anchors whose default was already handled by React (e.g. the
       // navbar view-switch), so the two systems don't both act on one click.
       if (e.defaultPrevented) return

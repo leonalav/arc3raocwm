@@ -71,7 +71,13 @@ export function BoardToolbar({
   );
 
   return (
-    <div className="board-chrome pointer-events-none absolute left-1/2 top-3 z-40 flex -translate-x-1/2 flex-col items-center gap-1.5">
+    <div
+      className="board-chrome pointer-events-none absolute left-1/2 top-3 z-40 flex -translate-x-1/2 flex-col items-center gap-1.5"
+      data-nopan
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
       {/* main bar — label size matches studyus_app BoardToolbar (10.5px / Space Grotesk) */}
       <div className="pointer-events-auto flex items-center gap-0.5 rounded-lg bg-[#1c1c1c]/95 px-1.5 py-1 shadow-[0_10px_34px_rgba(0,0,0,0.55)] ring-1 ring-white/10 backdrop-blur-md">
         <button

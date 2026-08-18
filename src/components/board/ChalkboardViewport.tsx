@@ -86,9 +86,27 @@ export default function ChalkboardViewport() {
   }
 
   return (
-    <div className="board-chrome overflow-hidden border border-white/15">
-      {/* Full-bleed chalkboard — no black inset frame */}
-      <div className="relative aspect-[16/10] w-full min-h-[480px] overflow-hidden sm:min-h-[560px] md:min-h-[680px]">
+    <div
+      className="board-chrome overflow-hidden border border-white/15"
+      data-nopan
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+    >
+      {/* Full-bleed chalkboard — no black inset frame.
+          data-nopan + stopPropagation: isolate demo interactions from the
+          page-level inertial scroll. Without this a click inside the chat dock
+          could be interpreted as an anchor glide and jump to #about-us. */}
+      <div
+        className="relative aspect-[16/10] w-full min-h-[480px] overflow-hidden sm:min-h-[560px] md:min-h-[680px]"
+        data-nopan
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+      >
         <div className="absolute inset-0">
           <Chalkboard
             board={board}

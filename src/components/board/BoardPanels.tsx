@@ -42,7 +42,13 @@ export function SettingsPanel({
   onClose: () => void;
 }) {
   return (
-    <div className="anim-toast absolute right-4 top-[68px] z-40 w-[298px] overflow-hidden rounded-lg border border-edge bg-[#161616]/97 shadow-[0_20px_56px_rgba(0,0,0,0.6)] backdrop-blur-md">
+    <div
+      className="anim-toast absolute right-4 top-[68px] z-40 w-[298px] overflow-hidden rounded-lg border border-edge bg-[#161616]/97 shadow-[0_20px_56px_rgba(0,0,0,0.6)] backdrop-blur-md"
+      data-nopan
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
       <div className="flex items-center justify-between border-b border-edge px-3 py-2.5">
         <h3 className="text-[12.5px] font-semibold text-fg">Board settings</h3>
         <button type="button" onClick={onClose} className="text-[12px] text-dim hover:text-fg">
@@ -487,7 +493,18 @@ export function ChatDock({
     : "absolute left-1/2 top-[68px] z-40 w-[min(520px,calc(100vw-32px))] -translate-x-1/2";
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll the chat's own container, never the window. The previous
+    // `scrollIntoView({behavior:"smooth"})` defaulted to `block: "start"` and
+    // could nudge window.scrollY, which combined with inertial-scroll state
+    // looked like a teleport to the top of the section.
+    if (endRef.current) {
+      const scroller = endRef.current.parentElement;
+      if (scroller) {
+        scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+      } else {
+        endRef.current.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      }
+    }
   }, [messages, typing]);
 
   const send = () => {
@@ -563,7 +580,15 @@ export function ChatDock({
       || typing
       || (agentStatus != null && agentStatus !== "idle" && agentStatus !== "error");
     return (
-      <div ref={shellRef} className={shellClass} style={shellStyle}>
+      <div
+        ref={shellRef}
+        className={shellClass}
+        style={shellStyle}
+        data-nopan
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+      >
         <div
           onMouseDown={startDrag}
           className="flex cursor-grab items-center gap-2 rounded-md border border-white/8 bg-[#343436]/58 px-2 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.25)] active:cursor-grabbing"
@@ -620,7 +645,15 @@ export function ChatDock({
   }
 
   return (
-    <div ref={shellRef} className={shellClass} style={shellStyle}>
+    <div
+      ref={shellRef}
+      className={shellClass}
+      style={shellStyle}
+      data-nopan
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
       {/* Floating Pill Window for Active Voice Soundwaves */}
       {isRecordingVoice && (
         <div className="anim-toast absolute -top-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border border-accent/40 bg-[#1c1c1e]/95 px-4 py-2 shadow-2xl backdrop-blur-md">
