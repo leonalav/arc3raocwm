@@ -3,12 +3,23 @@
 @theme {
   --font-heading: 'HelveticaNowDisplay-Medium', 'Helvetica Neue', Arial, sans-serif;
   --font-body: 'HelveticaNowDisplayW01-Rg', 'Helvetica Neue', Arial, sans-serif;
+  /* Study widgets are instruments, not handwriting — never inherit chalk cursive. */
+  --font-widget: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --color-accent: #2383e2;
+  --color-accent-deep: #1b74c9;
+  --color-fg: #e7e7e5;
+  --color-dim: #6e6e6c;
+  --color-mut: #9b9b99;
+  --color-edge: #2f2f2e;
+  --color-raise: #262626;
 }
 
 :root {
   font-synthesis: none;
   color: #000;
   background: #b5b5b5;
+  --font-widget: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --color-accent: #2383e2;
 }
 
 * {
@@ -77,5 +88,231 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .carousel-slide {
     animation: none;
+  }
+}
+
+/* ── chalkboard chrome — match app UI scale (Space Grotesk) ──
+   Marketing site sets `button { font: inherit }`, which pulls the large
+   landing-page body face into board chrome. Re-assert app sizes here. */
+.board-chrome,
+.board-chrome button,
+.board-chrome textarea,
+.board-chrome input {
+  font-family: var(--font-widget), "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+.board-chrome .board-toolbar-label {
+  font-size: 10.5px !important;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* AI Response dock — exact studyus_app ChatDock control sizes */
+.board-chrome .chat-ui-8 {
+  font-size: 8.5px !important;
+  line-height: 1.25;
+}
+.board-chrome .chat-ui-9 {
+  font-size: 9px !important;
+  line-height: 1.25;
+}
+.board-chrome .chat-ui-9_5 {
+  font-size: 9.5px !important;
+  line-height: 1.25;
+}
+.board-chrome .chat-ui-10 {
+  font-size: 10px !important;
+  line-height: 1.3;
+}
+.board-chrome .chat-ui-10_5 {
+  font-size: 10.5px !important;
+  line-height: 1.35;
+}
+.board-chrome .chat-ui-11 {
+  font-size: 11px !important;
+  line-height: 18px;
+}
+.board-chrome .chat-ui-label {
+  font-size: 9.5px !important;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+/* ── chalkboard (ported from studyus_app) ── */
+.board-block {
+  cursor: grab;
+}
+.board-block > * {
+  cursor: text;
+}
+
+@keyframes chalk-in {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(6px) rotate(-0.35deg);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) rotate(-0.15deg);
+  }
+}
+.anim-chalk {
+  animation: chalk-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow: 0 0 1px currentColor;
+}
+
+@keyframes chalk-visual-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.anim-chalk-visual {
+  animation: chalk-visual-in 0.2s ease-out both;
+  text-shadow: 0 0 1px currentColor;
+}
+
+.katex-chalk .katex {
+  color: inherit !important;
+  font-size: 1em !important;
+}
+.katex-chalk .katex-display {
+  margin: 0 !important;
+  text-align: left !important;
+}
+.katex-chalk .katex-display > .katex {
+  text-align: left !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* JSXGraph chalkboard adaptation */
+.JSXGraph,
+.jsxcell {
+  background: transparent !important;
+  font-family: monospace;
+}
+.JSXGraph svg,
+.jsxcell svg {
+  background: transparent !important;
+}
+.JXGtext,
+.JXGtext tspan {
+  fill: currentColor !important;
+  color: currentColor !important;
+  stroke: none !important;
+  font-family: monospace !important;
+}
+.JXG_board_logo,
+.JXG_navigation,
+.JXG_infobox {
+  display: none !important;
+}
+.JXGinfobox {
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: currentColor !important;
+  border: none !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-chalk,
+  .anim-chalk-visual {
+    animation: none !important;
+  }
+}
+
+/* Chat / toolbar motion (from studyus_app) */
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-msg {
+  animation: msg-in 0.28s ease-out both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.anim-toast {
+  animation: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes generative-text-in {
+  from { opacity: 0.72; filter: blur(0.5px); }
+  to { opacity: 1; filter: blur(0); }
+}
+.generative-text {
+  animation: generative-text-in 0.24s ease-out both;
+}
+
+@keyframes generative-caret-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.generative-caret {
+  animation: generative-caret-pulse 0.75s ease-in-out infinite;
+  box-shadow: 0 0 7px rgba(125, 211, 252, 0.55);
+}
+
+@keyframes agent-activity-sheen {
+  0% { transform: translateX(-130%); opacity: 0; }
+  18% { opacity: 0.7; }
+  72% { opacity: 0.35; }
+  100% { transform: translateX(220%); opacity: 0; }
+}
+.agent-activity-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 35%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.08), transparent);
+  animation: agent-activity-sheen 2.2s ease-in-out infinite;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-msg,
+  .anim-toast,
+  .agent-activity-active::after,
+  .generative-text,
+  .generative-caret {
+    animation: none !important;
+  }
+  .generative-caret {
+    display: none;
   }
 }
